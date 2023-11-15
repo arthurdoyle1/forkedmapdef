@@ -38,11 +38,8 @@
     <div id="map"></div>
     <div class="map-overlay">
         <h3>Marker Type Filter</h3>
-        <select id="markerFilter">
-            <option value="all">All</option>
-            <option value="clusters">Clusters</option>
-            <option value="unclustered-point">Unclustered Points</option>
-        </select>
+        <input type="range" id="magnitudeFilter" min="0" max="10" step="0.1" value="0" />
+        <span id="magnitudeValue">Magnitude: 0</span>
     </div>
 
     <script>
@@ -115,9 +112,10 @@
                 }
             });
 
-            document.getElementById('markerFilter').addEventListener('change', function () {
-                const filterValue = this.value;
-                updateMapLayers(filterValue);
+            document.getElementById('magnitudeFilter').addEventListener('input', function () {
+                const magnitudeValue = parseFloat(this.value);
+                document.getElementById('magnitudeValue').innerHTML = 'Magnitude: ' + magnitudeValue;
+                updateMapLayers(magnitudeValue);
             });
 
             // Popup functionality
@@ -140,8 +138,8 @@
             });
         });
 
-        function updateMapLayers(filterValue) {
-            const layers = ['clusters', 'cluster-count', 'unclustered-point'];
+        function updateMapLayers(magnitudeValue) {
+            map.setFilter('unclustered-point', ['all', ['!', ['has', 'point_count']], ['<=', ['get', 'mag'], magnitudeValue]]);
 
             layers.forEach(layerId => {
                 map.setLayoutProperty(layerId, 'visibility', layerId === filterValue ? 'visible' : 'none');
