@@ -1,152 +1,133 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <meta charset="utf-8">
-    <title>Create and style clusters</title>
-    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-        }
-
-        #map {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 100%;
-        }
-
-        .map-overlay {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: white;
-            padding: 10px;
-            font-family: 'Arial', sans-serif;
-            font-size: 12px;
-            z-index: 1;
-            border-radius: 3px;
-        }
-    </style>
+  <meta charset="utf-8">
+  <title>Filter symbols by toggling checkboxes</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+  <style>
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+  </style>
 </head>
-
 <body>
-    <div id="map"></div>
-    <div class="map-overlay">
-        <h3>Marker Type Filter</h3>
-        <input type="range" id="magnitudeFilter" min="0" max="10" step="0.1" value="0" />
-        <span id="magnitudeValue">Magnitude: 0</span>
-    </div>
+  <style>
+    /* Styles for filter group */
+    .filter-group {
+      font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+      font-weight: 600;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1;
+      border-radius: 3px;
+      width: 120px;
+      color: #fff;
+    }
 
-    <script>
-        mapboxgl.accessToken = 'pk.eyJ1IjoiYXJ0ZG95MyIsImEiOiJjbG96bWhmZzQwMXNoMmxxdmVqc2c2ZWRmIn0._PxpDHic5ZbhSndCkiVzIg';
+    .filter-group input[type='checkbox']:first-child + label {
+      border-radius: 3px 3px 0 0;
+    }
+
+    .filter-group label:last-child {
+      border-radius: 0 0 3px 3px;
+      border: none;
+    }
+
+    .filter-group input[type='checkbox'] {
+      display: none;
+    }
+
+    .filter-group input[type='checkbox'] + label {
+      background-color: #3386c0;
+      display: block;
+      cursor: pointer;
+      padding: 10px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+    }
+
+    .filter-group input[type='checkbox'] + label {
+      background-color: #3386c0;
+      text-transform: capitalize;
+    }
+
+    .filter-group input[type='checkbox'] + label:hover,
+    .filter-group input[type='checkbox']:checked + label {
+      background-color: #4ea0da;
+    }
+
+    .filter-group input[type='checkbox']:checked + label:before {
+      content: '✔';
+      margin-right: 5px;
+    }
+  </style>
+  <div id="map"></div>
+  <nav id="filter-group" class="filter-group"></nav>
+
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiYXJ0ZG95MyIsImEiOiJjbG96bWhmZzQwMXNoMmxxdmVqc2c2ZWRmIn0._PxpDHic5ZbhSndCkiVzIg';
+
+    // Fetch GeoJSON data from an external file
+    fetch('icons.geojson')
+      .then(response => response.json())
+      .then(data => {
+        // Create the map after GeoJSON data is loaded
         const map = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/mapbox/dark-v11',
-            center: [-103.5917, 40.6699],
-            zoom: 3
+          container: 'map',
+          style: 'mapbox://styles/mapbox/light-v11',
+          center: [-77.04, 38.907],
+          zoom: 11.15
         });
 
-        map.on('load', () => {
-            map.addSource('earthquakes', {
-                type: 'geojson',
-                data: 'https://docs.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson',
-                cluster: true,
-                clusterMaxZoom: 14,
-                clusterRadius: 50
-            });
-
-            map.addLayer({
-                id: 'clusters',
-                type: 'circle',
-                source: 'earthquakes',
-                filter: ['has', 'point_count'],
-                paint: {
-                    'circle-color': [
-                        'step',
-                        ['get', 'point_count'],
-                        '#51bbd6',
-                        100,
-                        '#f1f075',
-                        750,
-                        '#f28cb1'
-                    ],
-                    'circle-radius': [
-                        'step',
-                        ['get', 'point_count'],
-                        20,
-                        100,
-                        30,
-                        750,
-                        40
-                    ]
-                }
-            });
-
-            map.addLayer({
-                id: 'cluster-count',
-                type: 'symbol',
-                source: 'earthquakes',
-                filter: ['has', 'point_count'],
-                layout: {
-                    'text-field': ['get', 'point_count_abbreviated'],
-                    'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-                    'text-size': 12
-                }
-            });
-
-            map.addLayer({
-                id: 'unclustered-point',
-                type: 'circle',
-                source: 'earthquakes',
-                filter: ['!', ['has', 'point_count']],
-                paint: {
-                    'circle-color': '#11b4da',
-                    'circle-radius': 4,
-                    'circle-stroke-width': 1,
-                    'circle-stroke-color': '#fff'
-                }
-            });
-
-            document.getElementById('magnitudeFilter').addEventListener('input', function () {
-                const magnitudeValue = parseFloat(this.value);
-                document.getElementById('magnitudeValue').innerHTML = 'Magnitude: ' + magnitudeValue;
-                updateMapLayers(magnitudeValue);
-            });
-
-            // Popup functionality
-            map.on('click', 'unclustered-point', (e) => {
-                const coordinates = e.features[0].geometry.coordinates.slice();
-                const mag = e.features[0].properties.mag;
-                const tsunami =
-                    e.features[0].properties.tsunami === 1 ? 'yes' : 'no';
-
-                while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-                    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-                }
-
-                new mapboxgl.Popup()
-                    .setLngLat(coordinates)
-                    .setHTML(
-                        `magnitude: ${mag}<br>Was there a tsunami?: ${tsunami}`
-                    )
-                    .addTo(map);
-            });
+        // Add a GeoJSON source containing place coordinates and information.
+        map.addSource('places', {
+          type: 'geojson',
+          data: data
         });
 
-        function updateMapLayers(magnitudeValue) {
-            map.setFilter('unclustered-point', ['all', ['!', ['has', 'point_count']], ['<=', ['get', 'mag'], magnitudeValue]]);
+        const filterGroup = document.getElementById('filter-group');
 
-            layers.forEach(layerId => {
-                map.setLayoutProperty(layerId, 'visibility', layerId === filterValue ? 'visible' : 'none');
+        data.features.forEach(feature => {
+          const symbol = feature.properties.icon;
+          const layerID = `poi-${symbol}`;
+
+          // Add a layer for this symbol type if it hasn't been added already.
+          if (!map.getLayer(layerID)) {
+            map.addLayer({
+              id: layerID,
+              type: 'symbol',
+              source: 'places',
+              layout: {
+                'icon-image': `${symbol}`,
+                'icon-allow-overlap': true
+              },
+              filter: ['==', 'icon', symbol]
             });
-        }
-    </script>
 
+            // Add checkbox and label elements for the layer.
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.id = layerID;
+            input.checked = true;
+            filterGroup.appendChild(input);
+
+            const label = document.createElement('label');
+            label.setAttribute('for', layerID);
+            label.textContent = symbol;
+            filterGroup.appendChild(label);
+
+            // When the checkbox changes, update the visibility of the layer.
+            input.addEventListener('change', (e) => {
+              map.setLayoutProperty(
+                layerID,
+                'visibility',
+                e.target.checked ? 'visible' : 'none'
+              );
+            });
+          }
+        });
+      });
+  </script>
 </body>
-
 </html>
