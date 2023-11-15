@@ -1,0 +1,16 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "icon": "theatre"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-77.038659, 38.931567]
+      }
+    }
+    
+  ]
+}
