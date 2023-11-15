@@ -67,29 +67,100 @@ body { margin: 0; padding: 0; }
 <script>
 	mapboxgl.accessToken = 'pk.eyJ1IjoiYXJ0ZG95MyIsImEiOiJjbG96bWhmZzQwMXNoMmxxdmVqc2c2ZWRmIn0._PxpDHic5ZbhSndCkiVzIg';
     // This GeoJSON contains features that include an "icon"
-    fetch('places.geojson')
-      .then(response => response.json())
-      .then(data => {
-        initializeMap(data);
-      })
-      .catch(error => {
-        console.error('Error loading GeoJSON data:', error);
-      });
+    // property. The value of the "icon" property corresponds
+    // to an image in the Mapbox Light style's sprite. (Note:
+    // the name of images is the value of the "icon" property
+    // + "-15".)
+    const places = {
+        'type': 'FeatureCollection',
+        'features': [
+            {
+                'type': 'Feature',
+                'properties': {
+                    'icon': 'theatre'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.038659, 38.931567]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'icon': 'theatre'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.003168, 38.894651]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'icon': 'bar'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.090372, 38.881189]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'icon': 'bicycle'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.052477, 38.943951]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'icon': 'music'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.031706, 38.914581]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'icon': 'music'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.020945, 38.878241]
+                }
+            },
+            {
+                'type': 'Feature',
+                'properties': {
+                    'icon': 'music'
+                },
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': [-77.007481, 38.876516]
+                }
+            }
+        ]
+    };
 
-    function initializeMap(places) {
-      const filterGroup = document.getElementById('filter-group');
-      const map = new mapboxgl.Map({
+    const filterGroup = document.getElementById('filter-group');
+    const map = new mapboxgl.Map({
         container: 'map',
+        // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
         style: 'mapbox://styles/mapbox/light-v11',
         center: [-77.04, 38.907],
         zoom: 11.15
-      });
+    });
 
     map.on('load', () => {
         // Add a GeoJSON source containing place coordinates and information.
         map.addSource('places', {
             'type': 'geojson',
-            'data': places
+            'data': 'places.geojson'
         });
 
         for (const feature of places.features) {
